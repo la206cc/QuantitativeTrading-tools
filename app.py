@@ -64,19 +64,36 @@ def get_stock_data(symbol):
     dm = load_data_manager()
     return dm.get_stock_data(symbol)
 
-def create_candlestick_chart(data, indicators=None):
+def create_candlestick_chart(data, indicators=None, show_volume=True, show_oscillators=True):
     """创建K线图"""
     if data is None or len(data) == 0:
         return None
     
     # 创建子图
-    rows = 3 if indicators else 2
+    rows = 1
+    if show_volume:
+        rows += 1
+    if show_oscillators:
+        rows += 2  # RSI和MACD
+    
+    subplot_titles = ['K线图']
+    if show_volume:
+        subplot_titles.append('成交量')
+    if show_oscillators:
+        subplot_titles.extend(['RSI/动量指标', 'MACD/其他指标'])
+    
+    row_heights = [0.5]
+    if show_volume:
+        row_heights.append(0.15)
+    if show_oscillators:
+        row_heights.extend([0.175, 0.175])
+    
     fig = make_subplots(
         rows=rows, cols=1,
         shared_xaxes=True,
-        vertical_spacing=0.03,
-        subplot_titles=('K线图', '成交量', '技术指标') if indicators else ('K线图', '成交量'),
-        row_heights=[0.6, 0.2, 0.2] if indicators else [0.7, 0.3]
+        vertical_spacing=0.02,
+        subplot_titles=subplot_titles,
+        row_heights=row_heights
     )
     
     # K线图
@@ -97,44 +114,149 @@ def create_candlestick_chart(data, indicators=None):
     # 添加技术指标到K线图
     if indicators:
         for indicator, params in indicators.items():
-            if indicator in data.columns:
+            if indicator in data.columns and not data[indicator].isna().all():
                 fig.add_trace(
                     go.Scatter(
                         x=data['Date'], 
                         y=data[indicator], 
                         name=indicator,
-                        line=dict(color=params.get('color', 'blue'), width=1)
+                        line=dict(color=params.get('color', 'blue'), width=1),
+                        opacity=0.8
                     ),
                     row=1, col=1
                 )
     
-    # 成交量
-    colors = ['red' if close >= open else 'green' 
-              for close, open in zip(data['Close'], data['Open'])]
-    fig.add_trace(
-        go.Bar(x=data['Date'], y=data['Volume'], name='成交量', marker_color=colors),
-        row=2, col=1
-    )
+    current_row = 2
     
-    # 技术指标子图
-    if indicators and rows == 3:
-        # 这里可以添加RSI、MACD等指标
-        if 'RSI' in data.columns:
+    # 成交量
+    if show_volume:
+        colors = ['red' if close >= open else 'green' 
+                  for close, open in zip(data['Close'], data['Open'])]
+        fig.add_trace(
+            go.Bar(x=data['Date'], y=data['Volume'], name='成交量', marker_color=colors),
+            row=current_row, col=1
+        )
+        
+        # 成交量指标
+        if 'OBV' in data.columns and not data['OBV'].isna().all():
             fig.add_trace(
-                go.Scatter(x=data['Date'], y=data['RSI'], name='RSI', line=dict(color='purple')),
-                row=3, col=1
+                go.Scatter(x=data['Date'], y=data['OBV'], name='OBV', 
+                          line=dict(color='orange'), yaxis='y2'),
+                row=current_row, col=1
             )
-            fig.add_hline(y=70, line_dash="dash", line_color="red", row=3, col=1)
-            fig.add_hline(y=30, line_dash="dash", line_color="green", row=3, col=1)
+        
+        current_row += 1
+    
+    # RSI和其他动量指标
+    if show_oscillators:
+        # RSI
+        if 'RSI' in data.columns and not data['RSI'].isna().all():
+            fig.add_trace(
+                go.Scatter(x=data['Date'], y=data['RSI'], name='RSI', 
+                          line=dict(color='purple')),
+                row=current_row, col=1
+            )
+            fig.add_hline(y=70, line_dash="dash", line_color="red", row=current_row, col=1)
+            fig.add_hline(y=30, line_dash="dash", line_color="green", row=current_row, col=1)
+        
+        # 随机指标
+        if 'Stoch_K' in data.columns and not data['Stoch_K'].isna().all():
+            fig.add_trace(
+                go.Scatter(x=data['Date'], y=data['Stoch_K'], name='%K', 
+                          line=dict(color='blue')),
+                row=current_row, col=1
+            )
+        if 'Stoch_D' in data.columns and not data['Stoch_D'].isna().all():
+            fig.add_trace(
+                go.Scatter(x=data['Date'], y=data['Stoch_D'], name='%D', 
+                          line=dict(color='red')),
+                row=current_row, col=1
+            )
+        
+        # Williams %R
+        if 'Williams_R' in data.columns and not data['Williams_R'].isna().all():
+            fig.add_trace(
+                go.Scatter(x=data['Date'], y=data['Williams_R'], name='Williams %R', 
+                          line=dict(color='orange')),
+                row=current_row, col=1
+            )
+        
+        # CCI
+        if 'CCI' in data.columns and not data['CCI'].isna().all():
+            fig.add_trace(
+                go.Scatter(x=data['Date'], y=data['CCI'], name='CCI', 
+                          line=dict(color='brown')),
+                row=current_row, col=1
+            )
+        
+        current_row += 1
+        
+        # MACD
+        if 'MACD' in data.columns and not data['MACD'].isna().all():
+            fig.add_trace(
+                go.Scatter(x=data['Date'], y=data['MACD'], name='MACD', 
+                          line=dict(color='blue')),
+                row=current_row, col=1
+            )
+        if 'MACD_Signal' in data.columns and not data['MACD_Signal'].isna().all():
+            fig.add_trace(
+                go.Scatter(x=data['Date'], y=data['MACD_Signal'], name='信号线', 
+                          line=dict(color='red')),
+                row=current_row, col=1
+            )
+        if 'MACD_Histogram' in data.columns and not data['MACD_Histogram'].isna().all():
+            colors = ['red' if val >= 0 else 'green' for val in data['MACD_Histogram']]
+            fig.add_trace(
+                go.Bar(x=data['Date'], y=data['MACD_Histogram'], name='MACD柱', 
+                      marker_color=colors),
+                row=current_row, col=1
+            )
+        
+        # ADX
+        if 'ADX' in data.columns and not data['ADX'].isna().all():
+            fig.add_trace(
+                go.Scatter(x=data['Date'], y=data['ADX'], name='ADX', 
+                          line=dict(color='black')),
+                row=current_row, col=1
+            )
+        
+        # 阿隆指标
+        if 'Aroon_Up' in data.columns and not data['Aroon_Up'].isna().all():
+            fig.add_trace(
+                go.Scatter(x=data['Date'], y=data['Aroon_Up'], name='Aroon Up', 
+                          line=dict(color='green')),
+                row=current_row, col=1
+            )
+        if 'Aroon_Down' in data.columns and not data['Aroon_Down'].isna().all():
+            fig.add_trace(
+                go.Scatter(x=data['Date'], y=data['Aroon_Down'], name='Aroon Down', 
+                          line=dict(color='red')),
+                row=current_row, col=1
+            )
     
     # 更新布局
     fig.update_layout(
-        title='股票技术分析图表',
+        title='股票技术分析图表 - 增强版',
         xaxis_rangeslider_visible=False,
-        height=800,
+        height=800 if rows <= 2 else 1000,
         showlegend=True,
-        template='plotly_white'
+        template='plotly_white',
+        legend=dict(
+            orientation="h",
+            yanchor="bottom",
+            y=1.02,
+            xanchor="right",
+            x=1
+        )
     )
+    
+    # 更新y轴标签
+    fig.update_yaxes(title_text="价格", row=1, col=1)
+    if show_volume:
+        fig.update_yaxes(title_text="成交量", row=2, col=1)
+    if show_oscillators:
+        fig.update_yaxes(title_text="动量指标", row=rows-1, col=1)
+        fig.update_yaxes(title_text="MACD/ADX", row=rows, col=1)
     
     return fig
 
@@ -320,26 +442,121 @@ def main():
                 
                 # 技术指标选择
                 st.subheader("技术指标")
-                col1, col2, col3 = st.columns(3)
                 
-                with col1:
-                    show_ma = st.checkbox("移动平均线", value=True)
-                with col2:
-                    show_bb = st.checkbox("布林带", value=False)
-                with col3:
-                    show_rsi = st.checkbox("RSI", value=True)
+                # 趋势指标
+                with st.expander("📈 趋势指标", expanded=True):
+                    col1, col2, col3 = st.columns(3)
+                    with col1:
+                        show_sma = st.checkbox("简单移动平均线 (SMA)", value=True)
+                        show_ema = st.checkbox("指数移动平均线 (EMA)", value=True)
+                        show_wma = st.checkbox("加权移动平均线 (WMA)", value=False)
+                    with col2:
+                        show_dema = st.checkbox("双指数移动平均线 (DEMA)", value=False)
+                        show_tema = st.checkbox("三重指数移动平均线 (TEMA)", value=False)
+                        show_macd = st.checkbox("MACD", value=True)
+                    with col3:
+                        show_adx = st.checkbox("平均趋向指数 (ADX)", value=False)
+                        show_sar = st.checkbox("抛物线SAR", value=False)
+                
+                # 动量指标
+                with st.expander("⚡ 动量指标"):
+                    col1, col2, col3 = st.columns(3)
+                    with col1:
+                        show_rsi = st.checkbox("相对强弱指数 (RSI)", value=True)
+                        show_stoch = st.checkbox("随机指标 (Stochastic)", value=False)
+                        show_williams = st.checkbox("威廉指标 (Williams %R)", value=False)
+                    with col2:
+                        show_roc = st.checkbox("变动率指标 (ROC)", value=False)
+                        show_momentum = st.checkbox("动量指标 (Momentum)", value=False)
+                        show_cci = st.checkbox("商品通道指数 (CCI)", value=False)
+                    with col3:
+                        show_uo = st.checkbox("终极振荡器 (UO)", value=False)
+                
+                # 波动率指标
+                with st.expander("📊 波动率指标"):
+                    col1, col2, col3 = st.columns(3)
+                    with col1:
+                        show_bb = st.checkbox("布林带 (Bollinger Bands)", value=True)
+                        show_kc = st.checkbox("肯特纳通道 (Keltner)", value=False)
+                        show_dc = st.checkbox("唐奇安通道 (Donchian)", value=False)
+                    with col2:
+                        show_atr = st.checkbox("平均真实波幅 (ATR)", value=False)
+                        show_volatility = st.checkbox("历史波动率", value=False)
+                    with col3:
+                        pass
+                
+                # 成交量指标
+                with st.expander("📈 成交量指标"):
+                    col1, col2, col3 = st.columns(3)
+                    with col1:
+                        show_obv = st.checkbox("能量潮指标 (OBV)", value=False)
+                        show_ad = st.checkbox("累积/派发线 (A/D)", value=False)
+                    with col2:
+                        show_chaikin = st.checkbox("蔡金振荡器", value=False)
+                        show_vwap = st.checkbox("成交量加权平均价 (VWAP)", value=False)
+                    with col3:
+                        show_mfi = st.checkbox("资金流量指数 (MFI)", value=False)
+                        show_emv = st.checkbox("简易波动指标 (EMV)", value=False)
+                
+                # 综合指标
+                with st.expander("🌐 综合指标"):
+                    col1, col2 = st.columns(2)
+                    with col1:
+                        show_ichimoku = st.checkbox("一目均衡表 (Ichimoku)", value=False)
+                    with col2:
+                        show_aroon = st.checkbox("阿隆指标 (Aroon)", value=False)
                 
                 # 创建图表
                 indicators = {}
-                if show_ma:
+                
+                # 趋势指标
+                if show_sma:
                     indicators.update({
                         'SMA_5': {'color': 'orange'},
                         'SMA_20': {'color': 'blue'}
                     })
+                if show_ema:
+                    indicators.update({
+                        'EMA_12': {'color': 'red'},
+                        'EMA_26': {'color': 'green'}
+                    })
+                if show_wma:
+                    indicators['WMA_20'] = {'color': 'purple'}
+                if show_dema:
+                    indicators['DEMA_20'] = {'color': 'brown'}
+                if show_tema:
+                    indicators['TEMA_20'] = {'color': 'pink'}
+                if show_sar:
+                    indicators['SAR'] = {'color': 'black'}
+                
+                # 波动率指标
                 if show_bb:
                     indicators.update({
                         'BB_Upper': {'color': 'gray'},
                         'BB_Lower': {'color': 'gray'}
+                    })
+                if show_kc:
+                    indicators.update({
+                        'KC_Upper': {'color': 'lightblue'},
+                        'KC_Lower': {'color': 'lightblue'}
+                    })
+                if show_dc:
+                    indicators.update({
+                        'DC_Upper': {'color': 'lightgreen'},
+                        'DC_Lower': {'color': 'lightgreen'}
+                    })
+                
+                # 成交量指标
+                if show_vwap:
+                    indicators['VWAP'] = {'color': 'yellow'}
+                
+                # 一目均衡表
+                if show_ichimoku:
+                    indicators.update({
+                        'Tenkan_Sen': {'color': 'red'},
+                        'Kijun_Sen': {'color': 'blue'},
+                        'Senkou_Span_A': {'color': 'green'},
+                        'Senkou_Span_B': {'color': 'red'}
                     })
                 
                 fig = create_candlestick_chart(stock_data_with_indicators, indicators)

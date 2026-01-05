@@ -55,10 +55,11 @@ python start.py
 - **数据验证**: 自动检查数据完整性
 
 ### 📈 技术指标
-- **移动平均线**: SMA, EMA
-- **动量指标**: RSI, 随机指标
-- **趋势指标**: MACD, 布林带
-- **波动率指标**: ATR, Williams %R
+- **趋势指标**: SMA, EMA, WMA, DEMA, TEMA, KAMA, MACD, ADX, 抛物线SAR
+- **动量指标**: RSI, 随机指标, Williams %R, ROC, Momentum, CCI, Ultimate Oscillator
+- **波动率指标**: 布林带, 肯特纳通道, 唐奇安通道, ATR, 历史波动率
+- **成交量指标**: OBV, A/D Line, 蔡金振荡器, VWAP, MFI, EMV
+- **综合指标**: 一目均衡表, 阿隆指标
 
 ### 🎯 交易策略
 - **移动平均交叉**: 经典的趋势跟踪策略

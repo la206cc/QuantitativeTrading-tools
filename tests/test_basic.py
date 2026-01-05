@@ -76,14 +76,56 @@ class TestTechnicalIndicators:
         assert all(valid_rsi >= 0)
         assert all(valid_rsi <= 100)
     
-    def test_macd(self):
-        """测试MACD指标"""
-        macd_data = self.ti.macd(self.test_data)
+    def test_advanced_indicators(self):
+        """测试高级技术指标"""
+        # 创建更长的测试数据
+        np.random.seed(42)
+        prices = 100 + np.cumsum(np.random.normal(0, 1, 100))
+        high_prices = prices * 1.02
+        low_prices = prices * 0.98
+        volumes = np.random.randint(1000000, 2000000, 100)
         
-        assert 'MACD' in macd_data.columns
-        assert 'Signal' in macd_data.columns
-        assert 'Histogram' in macd_data.columns
-        assert len(macd_data) == len(self.test_data)
+        test_data = pd.DataFrame({
+            'High': high_prices,
+            'Low': low_prices,
+            'Close': prices,
+            'Volume': volumes
+        })
+        
+        # 测试ADX
+        adx_data = self.ti.adx(test_data['High'], test_data['Low'], test_data['Close'])
+        assert 'ADX' in adx_data.columns
+        assert '+DI' in adx_data.columns
+        assert '-DI' in adx_data.columns
+        
+        # 测试抛物线SAR
+        sar = self.ti.parabolic_sar(test_data['High'], test_data['Low'])
+        assert len(sar) == len(test_data)
+        
+        # 测试肯特纳通道
+        kc_data = self.ti.keltner_channels(test_data['High'], test_data['Low'], test_data['Close'])
+        assert 'Upper' in kc_data.columns
+        assert 'Middle' in kc_data.columns
+        assert 'Lower' in kc_data.columns
+        
+        # 测试成交量指标
+        obv = self.ti.obv(test_data['Close'], test_data['Volume'])
+        assert len(obv) == len(test_data)
+        
+        # 测试资金流量指数
+        mfi = self.ti.money_flow_index(test_data['High'], test_data['Low'], 
+                                      test_data['Close'], test_data['Volume'])
+        valid_mfi = mfi.dropna()
+        assert all(valid_mfi >= 0)
+        assert all(valid_mfi <= 100)
+        
+        # 测试一目均衡表
+        ichimoku_data = self.ti.ichimoku_cloud(test_data['High'], test_data['Low'], test_data['Close'])
+        assert 'Tenkan_Sen' in ichimoku_data.columns
+        assert 'Kijun_Sen' in ichimoku_data.columns
+        assert 'Senkou_Span_A' in ichimoku_data.columns
+        assert 'Senkou_Span_B' in ichimoku_data.columns
+        assert 'Chikou_Span' in ichimoku_data.columns
 
 class TestStrategy:
     """测试交易策略"""

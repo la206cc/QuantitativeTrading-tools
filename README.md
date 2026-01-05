@@ -30,12 +30,44 @@ python main.py --help
 
 ## 📊 支持的技术指标
 
+### 🔄 趋势指标
 - **SMA** - 简单移动平均线
 - **EMA** - 指数移动平均线  
-- **RSI** - 相对强弱指数
+- **WMA** - 加权移动平均线
+- **DEMA** - 双指数移动平均线
+- **TEMA** - 三重指数移动平均线
+- **KAMA** - 考夫曼自适应移动平均线
 - **MACD** - 移动平均收敛发散
-- **布林带** - 布林格带状指标
-- **成交量** - 成交量分析
+- **ADX** - 平均趋向指数
+- **抛物线SAR** - 抛物线止损转向指标
+
+### ⚡ 动量指标
+- **RSI** - 相对强弱指数
+- **随机指标** - Stochastic Oscillator (%K, %D)
+- **Williams %R** - 威廉指标
+- **ROC** - 变动率指标
+- **Momentum** - 动量指标
+- **CCI** - 商品通道指数
+- **Ultimate Oscillator** - 终极振荡器
+
+### 📊 波动率指标
+- **布林带** - Bollinger Bands
+- **肯特纳通道** - Keltner Channels
+- **唐奇安通道** - Donchian Channels
+- **ATR** - 平均真实波幅
+- **历史波动率** - Historical Volatility
+
+### 📈 成交量指标
+- **OBV** - 能量潮指标
+- **A/D Line** - 累积/派发线
+- **蔡金振荡器** - Chaikin Oscillator
+- **VWAP** - 成交量加权平均价
+- **MFI** - 资金流量指数
+- **EMV** - 简易波动指标
+
+### 🌐 综合指标
+- **一目均衡表** - Ichimoku Cloud (转换线、基准线、先行带A/B、滞后线)
+- **阿隆指标** - Aroon (Aroon Up, Aroon Down, Aroon Oscillator)
 
 ## 🎯 内置交易策略
 
