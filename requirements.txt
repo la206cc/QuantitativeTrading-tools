@@ -1,0 +1,28 @@
+# 量化交易模拟工具依赖包
+# QuantitativeTrading-tools Dependencies
+
+# 核心数据处理
+pandas>=2.0.0
+numpy>=1.24.0
+
+# 股票数据获取
+yfinance>=0.2.18
+
+# Web界面
+streamlit>=1.28.0
+
+# 数据可视化
+plotly>=5.15.0
+matplotlib>=3.7.0
+
+# 日期时间处理
+python-dateutil>=2.8.0
+
+# 数学计算
+scipy>=1.10.0
+
+# 进度条
+tqdm>=4.65.0
+
+# 测试框架
+pytest>=7.0.0
